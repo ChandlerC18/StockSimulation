@@ -4,9 +4,13 @@ from tkinter.messagebox import showinfo
 from calendar import month_name
 from tkcalendar import Calendar
 from datetime import datetime
+import numpy as np
+import pandas as pd
+import requests
+import os
+import yfinance as yf
 
 ### FUNCTIONS ###
-
 def login_clicked():
     """ callback when the login button clicked
     """
@@ -109,4 +113,11 @@ login_button.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
 # current_month = datetime.now().strftime('%b')
 # month_cb.set(current_month)
 
+## Get stock data ##
+tick = 'AAPL'
+date_start = "2022-07-07"
+date_end = "2022-07-08"
+data = yf.Ticker(tick).history(start=date_start, end=date_end, interval="1m")
+
+## Run GUI
 root.mainloop()
