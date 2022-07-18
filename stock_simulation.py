@@ -9,6 +9,8 @@ import pandas as pd
 import requests
 import os
 import yfinance as yf
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 ### FUNCTIONS ###
 def login_clicked():
@@ -117,7 +119,13 @@ login_button.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
 tick = 'AAPL'
 date_start = "2022-07-07"
 date_end = "2022-07-08"
-data = yf.Ticker(tick).history(start=date_start, end=date_end, interval="1m")
+data = yf.Ticker(tick).history(start=date_start, end=date_end, interval="1m").reset_index()
+
+data['Datetime'] = [x.strftime("%H:%M") for x in data['Datetime']]
+
+g = sns.lineplot(x='Datetime', y='Close', data=data)
+g.set_xticks(range(0, 400, 30), labels=[x for x in data['Datetime'] if x[-2:] == '00' or x[-2:] == '30'])
+plt.show()
 
 ## Run GUI
 root.mainloop()
