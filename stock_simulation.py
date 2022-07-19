@@ -11,6 +11,7 @@ import os
 import yfinance as yf
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 ### FUNCTIONS ###
 def login_clicked():
@@ -21,6 +22,14 @@ def login_clicked():
         title='Information',
         message=msg
     )
+
+def animate(i):
+    x = np.linspace(0, 1, 100)
+    y = fermi(x, 0.5, T[i])
+    f_d.set_data(x, y)
+    f_d.set_color(colors(i))
+    temp.set_text(str(int(T[i])) + ' K')
+    temp.set_color(colors(i))
 
 ### MAIN FLOW ###
 ## Configure main window
@@ -126,6 +135,11 @@ data['Datetime'] = [x.strftime("%H:%M") for x in data['Datetime']]
 g = sns.lineplot(x='Datetime', y='Close', data=data)
 g.set_xticks(range(0, 400, 30), labels=[x for x in data['Datetime'] if x[-2:] == '00' or x[-2:] == '30'])
 plt.show()
+
+f_d, = ax.plot([], [], linewidth=2.5)
+temp = ax.text(1, 1, '', ha='right', va='top', fontsize=24)
+ani = FuncAnimation(fig=fig, func=animate, frames=range(len(T)), interval=500, repeat=True)
+fig.tight_layout()
 
 ## Run GUI
 root.mainloop()
