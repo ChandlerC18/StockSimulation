@@ -10,6 +10,7 @@ import requests
 import os
 import yfinance as yf
 import seaborn as sns
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
@@ -146,8 +147,14 @@ data = yf.Ticker(tick).history(start=date_start, end=date_end, interval="1m").re
 # ani = FuncAnimation(fig=fig, func=animate, frames=range(len(data)), interval=500, repeat=False)
 # fig.tight_layout()
 # plt.show()
-import random
+
 from itertools import count
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg,
+    NavigationToolbar2Tk
+)
+
 plt.style.use('fivethirtyeight')
 
 x_values = []
@@ -155,17 +162,60 @@ y_values = []
 
 index = count()
 
-
 def animate(i):
     haha = next(index)
-    x_values.append(data.iloc[haha]['Datetime']
+    x_values.append(data.iloc[haha]['Datetime'])
     y_values.append(data.iloc[haha]['Close'])
     plt.cla()
     plt.plot(x_values, y_values)
 
-ani = FuncAnimation(fig=plt.gcf(), func=animate, frames = len(data), interval=300, repeat=False)
+# ani = FuncAnimation(fig=plt.gcf(), func=animate, frames = len(data), interval=300, repeat=False)
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 ## Run GUI
 # root.mainloop()
+
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+
+        self.title('Tkinter Matplotlib Demo')
+
+        # prepare data
+        data = {
+            'Python': 11.27,
+            'C': 11.16,
+            'Java': 10.46,
+            'C++': 7.5,
+            'C#': 5.26
+        }
+        languages = data.keys()
+        popularity = data.values()
+
+        # create a figure
+        figure = Figure(figsize=(6, 4), dpi=100)
+
+        # create FigureCanvasTkAgg object
+        figure_canvas = FigureCanvasTkAgg(figure, self)
+
+        # create the toolbar
+        NavigationToolbar2Tk(figure_canvas, self)
+
+        # create axes
+        axes = figure.add_subplot()
+
+        # create the barchart
+        # axes.bar(languages, popularity)
+        # axes.set_title('Top 5 Programming Languages')
+        # axes.set_ylabel('Popularity')
+        ani = FuncAnimation(fig=figure, func=animate, frames = len(data), interval=300, repeat=False)
+
+        figure_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        plt.show()
+
+
+if __name__ == '__main__':
+    app = App()
+    app.mainloop()
