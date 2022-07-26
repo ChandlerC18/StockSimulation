@@ -1,3 +1,4 @@
+#---------Imports
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import showinfo
@@ -13,6 +14,8 @@ import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import matplotlib.dates as mdates
+#---------End of imports
 
 ### FUNCTIONS ###
 def login_clicked():
@@ -131,6 +134,8 @@ date_start = "2022-07-07"
 date_end = "2022-07-08"
 data = yf.Ticker(tick).history(start=date_start, end=date_end, interval="1m").reset_index()
 
+data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace(year=int(date_start[:4]), month=int(date_start[5:7]), day=int(date_start[8:]))
+
 # data['Datetime'] = [x.strftime("%H:%M") for x in data['Datetime']]
 
 # g = sns.lineplot(x='Datetime', y='Close', data=data)
@@ -163,59 +168,20 @@ y_values = []
 index = count()
 
 def animate(i):
-    haha = next(index)
-    x_values.append(data.iloc[haha]['Datetime'])
-    y_values.append(data.iloc[haha]['Close'])
+    counter = next(index)
+
+    x_values.append(data.iloc[counter]['Datetime'].to_pydatetime())
+    y_values.append(data.iloc[counter]['Close'])
     plt.cla()
-    plt.plot(x_values, y_values)
+    plt.axis([data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime(), min(y_values) - 0.75, max(y_values) + 0.75])
+    fig = plt.plot(x_values, y_values)
+    plt.xlabel("Time")
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz= data.iloc[0]['Datetime'].tz))
+    plt.gca().xaxis.set_minor_locator(mdates.MinuteLocator(interval=10))
 
-# ani = FuncAnimation(fig=plt.gcf(), func=animate, frames = len(data), interval=300, repeat=False)
+ani = FuncAnimation(fig=plt.gcf(), func=animate, frames = len(data) - 1, interval=300, repeat=False)
 
-# plt.tight_layout()
-# plt.show()
-## Run GUI
+plt.tight_layout()
+plt.show()
+# Run GUI
 # root.mainloop()
-
-class App(tk.Tk):
-    def __init__(self):
-        super().__init__()
-
-        self.title('Tkinter Matplotlib Demo')
-
-        # prepare data
-        data = {
-            'Python': 11.27,
-            'C': 11.16,
-            'Java': 10.46,
-            'C++': 7.5,
-            'C#': 5.26
-        }
-        languages = data.keys()
-        popularity = data.values()
-
-        # create a figure
-        figure = Figure(figsize=(6, 4), dpi=100)
-
-        # create FigureCanvasTkAgg object
-        figure_canvas = FigureCanvasTkAgg(figure, self)
-
-        # create the toolbar
-        NavigationToolbar2Tk(figure_canvas, self)
-
-        # create axes
-        axes = figure.add_subplot()
-
-        # create the barchart
-        # axes.bar(languages, popularity)
-        # axes.set_title('Top 5 Programming Languages')
-        # axes.set_ylabel('Popularity')
-        ani = FuncAnimation(fig=figure, func=animate, frames = len(data), interval=300, repeat=False)
-
-        figure_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
-        plt.show()
-
-
-if __name__ == '__main__':
-    app = App()
-    app.mainloop()

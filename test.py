@@ -17,8 +17,8 @@ import pandas as pd
 index = count()
 
 tick = 'AAPL'
-date_start = "2022-07-07"
-date_end = "2022-07-08"
+date_start = "2022-07-20"
+date_end = "2022-07-21"
 data = yf.Ticker(tick).history(start=date_start, end=date_end, interval="1m").reset_index()
 
 x_values = []
@@ -54,8 +54,6 @@ data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace
 # Tk.mainloop()
 
 
-
-
 plt.style.use('fivethirtyeight')
 
 x_values = []
@@ -69,9 +67,11 @@ def animate(i):
     x_values.append(data.iloc[counter]['Datetime'].to_pydatetime())
     y_values.append(data.iloc[counter]['Close'])
     plt.cla()
-    plt.axis([data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime(), min(y_values) - 1, max(y_values) + 1])
+    plt.axis([data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime(), min(y_values) - 0.75, max(y_values) + 0.75])
     fig = plt.plot(x_values, y_values)
-    plt.gcf().autofmt_xdate()
+    plt.xlabel("Time")
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz= data.iloc[0]['Datetime'].tz))
+    # plt.gcf().autofmt_xdate()
 
 
 ani = animation.FuncAnimation(fig=plt.gcf(), func=animate, frames = len(data) - 1, interval=300, repeat=False)
