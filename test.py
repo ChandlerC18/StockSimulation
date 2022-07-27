@@ -109,13 +109,33 @@ canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 index = count()
 
 def animate(i):
-    counter = next(index)
-    x_values.append(data.iloc[counter]['Datetime'].to_pydatetime())
-    y_values.append(data.iloc[counter]['Close'])
-    ax.set_ylim(min(y_values) - 0.5, max(y_values) + 0.5)
-    line.set_data(x_values, y_values)
+    print(i)
+    if begin:
+        counter = next(index)
+        x_values.append(data.iloc[counter]['Datetime'].to_pydatetime())
+        y_values.append(data.iloc[counter]['Close'])
+        ax.set_ylim(min(y_values) - 0.5, max(y_values) + 0.5)
+        line.set_data(x_values, y_values)
+    else:
+        anim.event_source.stop()
 
 anim = animation.FuncAnimation(fig, animate,
                                 frames=len(data) - 1, interval=100, repeat=False)
+
+begin = False
+
+def start():
+    global begin
+    begin = True
+    anim.event_source.start()
+
+def stop():
+    anim.event_source.stop()
+
+button = Tk.Button(master=root, text="Start", command=start)
+button.pack(side=Tk.BOTTOM)
+
+button = Tk.Button(master=root, text="Stop", command=stop)
+button.pack(side=Tk.BOTTOM)
 
 Tk.mainloop()

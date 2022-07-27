@@ -163,16 +163,32 @@ toolbar.grid(row=6, column=0)
 button = tk.Button(master=root, text="Quit", command=root.quit)
 button.grid(row=7, column=0)
 
-def init():
-    line.set_data([], [])
-
 def animate(i):
-    x_val.append(data.iloc[i]['Datetime'].to_pydatetime())
-    y_val.append(data.iloc[i]['Close'])
-    ax.set_ylim(min(y_val) - 0.5, max(y_val) + 0.5)
-    line.set_data(x_val, y_val)
+    if start:
+        x_val.append(data.iloc[i]['Datetime'].to_pydatetime())
+        y_val.append(data.iloc[i]['Close'])
+        ax.set_ylim(min(y_val) - 0.5, max(y_val) + 0.5)
+        line.set_data(x_val, y_val)
+    else:
+        anim.event_source.stop()
 
-anim = FuncAnimation(fig, animate, init_func=init, frames=len(data) - 1, interval=100, repeat=False)
+anim = FuncAnimation(fig, animate, init_func=lambda : line.set_data([], []), frames=len(data) - 1, interval=100, repeat=False)
+
+start = False
+
+def resume():
+    global start
+    start = True
+    anim.event_source.start()
+
+def stop():
+    anim.event_source.stop()
+
+button = tk.Button(master=root, text="Start", command=resume)
+button.grid(row=7, column=1)
+
+button = tk.Button(master=root, text="Stop", command=stop)
+button.grid(row=7, column=2)
 
 # Run GUI
 root.mainloop()
