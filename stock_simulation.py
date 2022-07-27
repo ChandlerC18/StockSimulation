@@ -15,6 +15,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import matplotlib.dates as mdates
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg,
+    NavigationToolbar2Tk
+)
 #---------End of imports
 
 ### FUNCTIONS ###
@@ -136,6 +141,9 @@ data = yf.Ticker(tick).history(start=date_start, end=date_end, interval="1m").re
 
 data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace(year=int(date_start[:4]), month=int(date_start[5:7]), day=int(date_start[8:]))
 
+x_val = []
+y_val = []
+
 # data['Datetime'] = [x.strftime("%H:%M") for x in data['Datetime']]
 
 # g = sns.lineplot(x='Datetime', y='Close', data=data)
@@ -153,35 +161,68 @@ data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace
 # fig.tight_layout()
 # plt.show()
 
-from itertools import count
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg,
-    NavigationToolbar2Tk
-)
 
-plt.style.use('fivethirtyeight')
+#
+# plt.style.use('fivethirtyeight')
+#
+# x_values = []
+# y_values = []
+#
+# index = count()
+#
+# def animate(i):
+#     counter = next(index)
+#
+#     x_values.append(data.iloc[counter]['Datetime'].to_pydatetime())
+#     y_values.append(data.iloc[counter]['Close'])
+#     plt.cla()
+#     plt.axis([data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime(), min(y_values) - 0.75, max(y_values) + 0.75])
+#     fig = plt.plot(x_values, y_values)
+#     plt.xlabel("Time")
+#     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz= data.iloc[0]['Datetime'].tz))
+#     plt.gca().xaxis.set_minor_locator(mdates.MinuteLocator(interval=10))
+#
+# ani = FuncAnimation(fig=plt.gcf(), func=animate, frames = len(data) - 1, interval=300, repeat=False)
+#
+# plt.tight_layout()
+# plt.show()
 
-x_values = []
-y_values = []
+plt.rcParams["figure.figsize"] = [7.00, 3.50]
+plt.rcParams["figure.autolayout"] = True
 
-index = count()
+root = tk.Tk()
+root.wm_title("Embedding in Tk")
+
+fig = plt.Figure(dpi=100)
+ax = fig.add_subplot(xlim=(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime()), ylim=(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5))
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz= data.iloc[0]['Datetime'].tz))
+line, = ax.plot([], [], lw=2)
+
+canvas = FigureCanvasTkAgg(fig, master=root)
+canvas.draw()
+
+toolbar = NavigationToolbar2Tk(canvas, root, pack_toolbar=False)
+toolbar.update()
+
+button = tk.Button(master=root, text="Quit", command=root.quit)
+button.pack(side=tk.BOTTOM)
+
+toolbar.pack(side=tk.BOTTOM, fill=tk.X)
+canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+def init():
+    line.set_data([], [])
 
 def animate(i):
-    counter = next(index)
+    print(i)
+    x_val.append(data.iloc[i]['Datetime'].to_pydatetime())
+    y_val.append(data.iloc[i]['Close'])
+    ax.set_ylim(min(y_val) - 0.5, max(y_val) + 0.5)
+    line.set_data(x_val, y_val)
 
-    x_values.append(data.iloc[counter]['Datetime'].to_pydatetime())
-    y_values.append(data.iloc[counter]['Close'])
-    plt.cla()
-    plt.axis([data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime(), min(y_values) - 0.75, max(y_values) + 0.75])
-    fig = plt.plot(x_values, y_values)
-    plt.xlabel("Time")
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz= data.iloc[0]['Datetime'].tz))
-    plt.gca().xaxis.set_minor_locator(mdates.MinuteLocator(interval=10))
+anim = FuncAnimation(fig, animate, init_func=init, frames=len(data) - 1, interval=100, repeat=False)
 
-ani = FuncAnimation(fig=plt.gcf(), func=animate, frames = len(data) - 1, interval=300, repeat=False)
+tk.mainloop()
 
-plt.tight_layout()
-plt.show()
 # Run GUI
 # root.mainloop()
