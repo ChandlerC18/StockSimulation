@@ -95,7 +95,7 @@ date_entry = ttk.Entry(root,  textvariable=date)
 date_entry.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
 
 # login button
-login_button = ttk.Button(root, text="Login")
+login_button = ttk.Button(root, text="Login", command=login_clicked)
 login_button.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
 
 
@@ -104,34 +104,34 @@ enter_date = ttk.Frame(root)
 date_label = ttk.Label(enter_date, text="Please select a month:")
 date_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
 
-# create a combobox
-selected_month = tk.StringVar()
-month_cb = ttk.Combobox(enter_date, textvariable=selected_month)
-
-# get first 3 letters of every month name
-month_cb['values'] = [month_name[m][0:3] for m in range(1, 13)]
-
-# prevent typing a value
-month_cb['state'] = 'normal'
-
-# place the widget
-month_cb.grid(column=1, row=1, sticky=tk.E, padx=5, pady=5)
-
-
-# bind the selected value changes
-def month_changed(event):
-    """ handle the month changed event """
-    showinfo(
-        title='Result',
-        message=f'You selected {selected_month.get()}!'
-    )
-
-
-month_cb.bind('<<ComboboxSelected>>', month_changed)
-
-# set the current month
-current_month = datetime.now().strftime('%b')
-month_cb.set(current_month)
+# # create a combobox
+# selected_month = tk.StringVar()
+# month_cb = ttk.Combobox(enter_date, textvariable=selected_month)
+#
+# # get first 3 letters of every month name
+# month_cb['values'] = [month_name[m][0:3] for m in range(1, 13)]
+#
+# # prevent typing a value
+# month_cb['state'] = 'normal'
+#
+# # place the widget
+# month_cb.grid(column=1, row=1, sticky=tk.E, padx=5, pady=5)
+#
+#
+# # bind the selected value changes
+# def month_changed(event):
+#     """ handle the month changed event """
+#     showinfo(
+#         title='Result',
+#         message=f'You selected {selected_month.get()}!'
+#     )
+#
+#
+# month_cb.bind('<<ComboboxSelected>>', month_changed)
+#
+# # set the current month
+# current_month = datetime.now().strftime('%b')
+# month_cb.set(current_month)
 
 ## Get stock data ##
 tick = 'AAPL'
@@ -154,14 +154,14 @@ line, = ax.plot([], [], lw=2)
 
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.draw()
-canvas.get_tk_widget().grid(row=5, column=0, ipadx=40, ipady=20)
+canvas.get_tk_widget().grid(row=5, column=0, ipadx=40, ipady=20, columnspan=3)
 
 toolbar = NavigationToolbar2Tk(canvas, root, pack_toolbar=False)
 toolbar.update()
 toolbar.grid(row=6, column=0)
 
 button = tk.Button(master=root, text="Quit", command=root.quit)
-button.grid(row=7, column=0)
+button.grid(row=7, column=2)
 
 def animate(i):
     if start:
@@ -181,14 +181,14 @@ def resume():
     start = True
     anim.event_source.start()
 
-def stop():
+def pause():
     anim.event_source.stop()
 
 button = tk.Button(master=root, text="Start", command=resume)
-button.grid(row=7, column=1)
+button.grid(row=7, column=0)
 
-button = tk.Button(master=root, text="Stop", command=stop)
-button.grid(row=7, column=2)
+button = tk.Button(master=root, text="Pause", command=pause)
+button.grid(row=7, column=1)
 
 # Run GUI
 root.mainloop()
