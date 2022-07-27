@@ -12,6 +12,7 @@ from matplotlib.backends.backend_tkagg import (
     NavigationToolbar2Tk
 )
 import matplotlib.dates as mdates
+from matplotlib.backend_bases import key_press_handler
 import pandas as pd
 #---------End of imports
 index = count()
@@ -53,17 +54,72 @@ data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace
 #
 # Tk.mainloop()
 
+######------Aunimated plot of stock data------######
 
-plt.style.use('fivethirtyeight')
+def create_plot():
+    plt.style.use('fivethirtyeight')
 
-x_values = []
-y_values = []
+    x_values = []
+    y_values = []
+
+    index = count()
+
+    def animate(i):
+        counter = next(index)
+
+        x_values.append(data.iloc[counter]['Datetime'].to_pydatetime())
+        y_values.append(data.iloc[counter]['Close'])
+        plt.cla()
+        plt.axis([data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime(), min(y_values) - 0.75, max(y_values) + 0.75])
+        fig = plt.plot(x_values, y_values)
+        plt.xlabel("Time")
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz= data.iloc[0]['Datetime'].tz))
+        # plt.gcf().autofmt_xdate()
+
+
+    ani = animation.FuncAnimation(fig=plt.gcf(), func=animate, frames = len(data) - 1, interval=300, repeat=False)
+
+    plt.tight_layout()
+    plt.show()
+
+#####-----Embed plot in tkinter-----#####
+
+plt.rcParams["figure.figsize"] = [7.00, 3.50]
+plt.rcParams["figure.autolayout"] = True
+
+root = Tk.Tk()
+root.wm_title("Embedding in Tk")
+
+# plt.axes(xlim=(0, 2), ylim=(-2, 2))
+fig = plt.Figure(dpi=100)
+# ax = fig.add_subplot(xlim=(0, 2), ylim=(-1, 1))
+ax = fig.add_subplot()
+line, = ax.plot([], [], lw=2)
+
+canvas = FigureCanvasTkAgg(fig, master=root)
+canvas.draw()
+
+toolbar = NavigationToolbar2Tk(canvas, root, pack_toolbar=False)
+toolbar.update()
+
+canvas.mpl_connect(
+    "key_press_event", lambda event: print(f"you pressed {event.key}"))
+canvas.mpl_connect("key_press_event", key_press_handler)
+
+button = Tk.Button(master=root, text="Quit", command=root.quit)
+button.pack(side=Tk.BOTTOM)
+
+toolbar.pack(side=Tk.BOTTOM, fill=Tk.X)
+canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
+
+def init():
+    line.set_data([], [])
+    return line,
 
 index = count()
 
 def animate(i):
     counter = next(index)
-
     x_values.append(data.iloc[counter]['Datetime'].to_pydatetime())
     y_values.append(data.iloc[counter]['Close'])
     plt.cla()
@@ -71,10 +127,12 @@ def animate(i):
     fig = plt.plot(x_values, y_values)
     plt.xlabel("Time")
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz= data.iloc[0]['Datetime'].tz))
-    # plt.gcf().autofmt_xdate()
+    # x = np.linspace(0, 2, 1000)
+    # y = np.sin(2 * np.pi * (x - 0.01 * i))
+    line.set_data(x_values, y_values)
+    plt.plot(x_values, y_values)
+    return line,
 
+anim = animation.FuncAnimation(fig, animate, init_func=init,frames=200, interval=20, blit=True)
 
-ani = animation.FuncAnimation(fig=plt.gcf(), func=animate, frames = len(data) - 1, interval=300, repeat=False)
-
-plt.tight_layout()
-plt.show()
+Tk.mainloop()
