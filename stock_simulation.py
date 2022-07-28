@@ -4,7 +4,7 @@ from tkinter import ttk
 from tkinter.messagebox import showinfo
 from calendar import month_name
 from tkcalendar import Calendar
-from datetime import datetime
+import datetime
 import numpy as np
 import pandas as pd
 import requests
@@ -15,6 +15,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import matplotlib.dates as mdates
+import pytz
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg,
@@ -30,13 +31,13 @@ def login_clicked():
     global ticker
 
     msg = ''
-    ticker = yf.Ticker(stock.get()).info['regularMarketPrice']
+    ticker = yf.Ticker(stock.get())
 
-    if (ticker == None):
+    if (ticker.info['regularMarketPrice'] == None):
          msg += f"No information for '{stock.get()}'. \nPlease enter a valid stock ticker.\n\n\n"
 
     try:
-        datetime.strptime(date.get(), "%Y-%m-%d")
+        datetime.datetime.strptime(date.get(), "%Y-%m-%d")
     except:
         msg += f'Invalid date format. Please \nenter a valid date \nwith the following \nformat YYYY-mm-dd.'
 
@@ -44,6 +45,22 @@ def login_clicked():
         tk.messagebox.showerror(title='Error', message=msg)
     else:
         valid_entries = True
+        prepare_data()
+
+def prepare_data():
+
+    global ax
+    global fig
+    global data
+
+    date_end = datetime.datetime.strptime(date.get(), "%Y-%m-%d") + datetime.timedelta(days=1)
+    data = ticker.history(start=date.get(), end=date_end.strftime("%Y-%m-%d"), interval="1m").reset_index()
+
+    data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace(year=int(date.get()[:4]), month=int(date.get()[5:7]), day=int(date.get()[8:]))
+
+    ax.set_ylim(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5)
+    ax.set_xlim(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime())
+    canvas.draw()
 
 #
 # def animate(i):
@@ -117,9 +134,9 @@ run_button.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
 
 
 ## Select date
-enter_date = ttk.Frame(root)
-date_label = ttk.Label(enter_date, text="Please select a month:")
-date_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
+# enter_date = ttk.Frame(root)
+# date_label = ttk.Label(enter_date, text="Please select a month:")
+# date_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
 
 # # create a combobox
 # selected_month = tk.StringVar()
@@ -151,11 +168,12 @@ date_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
 # month_cb.set(current_month)
 
 ## Get stock data ##
-date_end = datetime.strptime(date.get(), "%Y-%m-%d") + datetime.timedelta(days=1)
-data = ticker.history(start=date.get(), end=date_end.strftime("%Y-%m-%d"), interval="1m").reset_index()
+# date_end = datetime.strptime(date.get(), "%Y-%m-%d") + datetime.timedelta(days=1)
+# data = ticker.history(start=date.get(), end=date_end.strftime("%Y-%m-%d"), interval="1m").reset_index()
+#
+# data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace(year=int(date_start[:4]), month=int(date_start[5:7]), day=int(date_start[8:]))
 
-data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace(year=int(date_start[:4]), month=int(date_start[5:7]), day=int(date_start[8:]))
-
+data = None
 x_val = []
 y_val = []
 
@@ -163,9 +181,11 @@ plt.rcParams["figure.figsize"] = [7.00, 3.50]
 plt.rcParams["figure.autolayout"] = True
 
 fig = plt.Figure(dpi=100)
-ax = fig.add_subplot(xlim=(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime()), ylim=(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5))
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz= data.iloc[0]['Datetime'].tz))
-line, = ax.plot([], [], lw=2)
+ax = fig.add_subplot(xlim=(datetime.datetime(2021, 6, 10, hour=9, minute=30, tzinfo=pytz.timezone('America/New_York')),
+                           datetime.datetime(2021, 6, 10, hour=16, minute=0, tzinfo=pytz.timezone('America/New_York'))), ylim=(0, 2))
+# ax = fig.add_subplot(xlim=(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime()), ylim=(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5))
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz=pytz.timezone('America/New_York')))
+line, = ax.plot([], [], lw=2, color='red')
 
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.draw()
@@ -179,22 +199,37 @@ button = tk.Button(master=root, text="Quit", command=root.quit)
 button.grid(row=7, column=2)
 
 def animate(i):
-    if start:
+
+    global canvas
+
+    if started:
         x_val.append(data.iloc[i]['Datetime'].to_pydatetime())
         y_val.append(data.iloc[i]['Close'])
         ax.set_ylim(min(y_val) - 0.5, max(y_val) + 0.5)
+        # ax.set_xlim(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime())
         line.set_data(x_val, y_val)
+        canvas.draw()
+        # plt.show()
     else:
         anim.event_source.stop()
 
-anim = FuncAnimation(fig, animate, init_func=lambda : line.set_data([], []), frames=len(data) - 1, interval=100, repeat=False)
+    return line,
 
-start = False
+def init():
+    line.set_data([], [])
+    return line,
+
+anim = None
+started = False
 
 def resume():
-    global start
-    start = True
-    anim.event_source.start()
+    global anim
+    global started
+    if started:
+        anim.event_source.start()
+    else:
+        started = True
+        anim = FuncAnimation(fig, animate, init_func=init, frames=389, interval=100, repeat=False, blit=True)
 
 def pause():
     anim.event_source.stop()
