@@ -62,6 +62,17 @@ def prepare_data():
     ax.set_xlim(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime())
     canvas.draw()
 
+def agreement_changed():
+
+    global toolbar
+
+    if agreement.get() == 'agree':
+        toolbar = NavigationToolbar2Tk(canvas, root, pack_toolbar=False)
+        toolbar.update()
+        toolbar.grid(row=6, column=0)
+    else:
+        toolbar.grid_remove()
+
 #
 # def animate(i):
 #     time.append(i)
@@ -133,6 +144,12 @@ run_button = ttk.Button(root, text="Run", command=login_clicked)
 run_button.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
 
 
+## Checkbox to display graph toolbar
+agreement = tk.StringVar()
+checkbox = ttk.Checkbutton(root, text='Show Graph Toolbar', command=agreement_changed,
+                variable=agreement, onvalue='agree', offvalue='disagree')
+checkbox.grid(column=2, row=3, sticky=tk.E, padx=5, pady=5)
+
 ## Select date
 # enter_date = ttk.Frame(root)
 # date_label = ttk.Label(enter_date, text="Please select a month:")
@@ -191,9 +208,7 @@ canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.draw()
 canvas.get_tk_widget().grid(row=5, column=0, ipadx=40, ipady=20, columnspan=3)
 
-toolbar = NavigationToolbar2Tk(canvas, root, pack_toolbar=False)
-toolbar.update()
-toolbar.grid(row=6, column=0)
+toolbar = None
 
 button = tk.Button(master=root, text="Quit", command=root.quit)
 button.grid(row=7, column=2)
@@ -232,13 +247,23 @@ def resume():
         anim = FuncAnimation(fig, animate, init_func=init, frames=389, interval=100, repeat=False, blit=True)
 
 def pause():
-    anim.event_source.stop()
+    if started:
+        anim.event_source.stop()
+
+def trade():
+    print('Click')
 
 button = tk.Button(master=root, text="Start", command=resume)
 button.grid(row=7, column=0)
 
 button = tk.Button(master=root, text="Pause", command=pause)
 button.grid(row=7, column=1)
+
+button = tk.Button(master=root, text="Long/Buy", command=trade)
+button.grid(row=8, column=0)
+
+button = tk.Button(master=root, text="Sell/Short", command=trade)
+button.grid(row=8, column=1)
 
 # Run GUI
 root.mainloop()
