@@ -31,10 +31,6 @@ def login_clicked():
 
     msg = ''
     ticker = yf.Ticker(stock.get()).info['regularMarketPrice']
-    # try:
-    #     info = yf.Ticker(stock.get()).info['regularMarketPrice']
-    # except:
-    #     msg += f"No information for '{stock.get()}'. \nPlease enter a valid stock ticker.\n\n\n"
 
     if (ticker == None):
          msg += f"No information for '{stock.get()}'. \nPlease enter a valid stock ticker.\n\n\n"
@@ -155,10 +151,8 @@ date_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
 # month_cb.set(current_month)
 
 ## Get stock data ##
-tick = 'AAPL'
-date_start = "2022-07-07"
-date_end = "2022-07-08"
-data = yf.Ticker(tick).history(start=date_start, end=date_end, interval="1m").reset_index()
+date_end = datetime.strptime(date.get(), "%Y-%m-%d") + datetime.timedelta(days=1)
+data = ticker.history(start=date.get(), end=date_end.strftime("%Y-%m-%d"), interval="1m").reset_index()
 
 data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace(year=int(date_start[:4]), month=int(date_start[5:7]), day=int(date_start[8:]))
 
