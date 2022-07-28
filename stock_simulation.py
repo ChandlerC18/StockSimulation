@@ -26,11 +26,29 @@ from matplotlib.backends.backend_tkagg import (
 def login_clicked():
     """ callback when the login button clicked
     """
-    msg = f'You entered stock: {stock.get()}'
-    showinfo(
-        title='Information',
-        message=msg
-    )
+    global valid_entries
+    global ticker
+
+    msg = ''
+    ticker = yf.Ticker(stock.get()).info['regularMarketPrice']
+    # try:
+    #     info = yf.Ticker(stock.get()).info['regularMarketPrice']
+    # except:
+    #     msg += f"No information for '{stock.get()}'. \nPlease enter a valid stock ticker.\n\n\n"
+
+    if (ticker == None):
+         msg += f"No information for '{stock.get()}'. \nPlease enter a valid stock ticker.\n\n\n"
+
+    try:
+        datetime.strptime(date.get(), "%Y-%m-%d")
+    except:
+        msg += f'Invalid date format. Please \nenter a valid date \nwith the following \nformat YYYY-mm-dd.'
+
+    if msg:
+        tk.messagebox.showerror(title='Error', message=msg)
+    else:
+        valid_entries = True
+
 #
 # def animate(i):
 #     time.append(i)
@@ -41,6 +59,9 @@ def login_clicked():
     # temp.set_color(colors(i))
 
 ### MAIN FLOW ###
+ticker = None # yfinance stock ticker
+valid_entries = False # boolean for whether data entered is valid
+
 # Configure main window
 root = tk.Tk()
 
@@ -94,9 +115,9 @@ date_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
 date_entry = ttk.Entry(root,  textvariable=date)
 date_entry.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
 
-# login button
-login_button = ttk.Button(root, text="Login", command=login_clicked)
-login_button.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
+# Run button
+run_button = ttk.Button(root, text="Run", command=login_clicked)
+run_button.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
 
 
 ## Select date
