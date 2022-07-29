@@ -82,60 +82,113 @@ def create_plot():
     plt.show()
 
 #####-----Embed plot in tkinter-----#####
+#
+# plt.rcParams["figure.figsize"] = [7.00, 3.50]
+# plt.rcParams["figure.autolayout"] = True
+#
+# root = Tk.Tk()
+# root.wm_title("Embedding in Tk")
+#
+# fig = plt.Figure(dpi=100)
+# ax = fig.add_subplot(xlim=(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime()), ylim=(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5))
+# ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz= data.iloc[0]['Datetime'].tz))
+# line, = ax.plot([], [], lw=2)
+#
+# canvas = FigureCanvasTkAgg(fig, master=root)
+# canvas.draw()
+#
+# toolbar = NavigationToolbar2Tk(canvas, root, pack_toolbar=False)
+# toolbar.update()
+#
+# button = Tk.Button(master=root, text="Quit", command=root.quit)
+# button.pack(side=Tk.BOTTOM)
+#
+# toolbar.pack(side=Tk.BOTTOM, fill=Tk.X)
+# canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
+#
+# index = count()
+#
+# def animate(i):
+#     print(i)
+#     if begin:
+#         counter = next(index)
+#         x_values.append(data.iloc[counter]['Datetime'].to_pydatetime())
+#         y_values.append(data.iloc[counter]['Close'])
+#         ax.set_ylim(min(y_values) - 0.5, max(y_values) + 0.5)
+#         line.set_data(x_values, y_values)
+#     else:
+#         anim.event_source.stop()
+#
+# anim = animation.FuncAnimation(fig, animate,
+#                                 frames=len(data) - 1, interval=100, repeat=False)
+#
+# begin = False
+#
+# def start():
+#     global begin
+#     begin = True
+#     anim.event_source.start()
+#
+# def stop():
+#     anim.event_source.stop()
+#
+# button = Tk.Button(master=root, text="Start", command=start)
+# button.pack(side=Tk.BOTTOM)
+#
+# button = Tk.Button(master=root, text="Stop", command=stop)
+# button.pack(side=Tk.BOTTOM)
+#
+# Tk.mainloop()
 
-plt.rcParams["figure.figsize"] = [7.00, 3.50]
-plt.rcParams["figure.autolayout"] = True
-
-root = Tk.Tk()
-root.wm_title("Embedding in Tk")
-
-fig = plt.Figure(dpi=100)
-ax = fig.add_subplot(xlim=(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime()), ylim=(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5))
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz= data.iloc[0]['Datetime'].tz))
-line, = ax.plot([], [], lw=2)
-
-canvas = FigureCanvasTkAgg(fig, master=root)
-canvas.draw()
-
-toolbar = NavigationToolbar2Tk(canvas, root, pack_toolbar=False)
-toolbar.update()
-
-button = Tk.Button(master=root, text="Quit", command=root.quit)
-button.pack(side=Tk.BOTTOM)
-
-toolbar.pack(side=Tk.BOTTOM, fill=Tk.X)
-canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
-
-index = count()
+### BROKEN DIFFERENT COLORS GRAPH ###
 
 def animate(i):
-    print(i)
-    if begin:
-        counter = next(index)
-        x_values.append(data.iloc[counter]['Datetime'].to_pydatetime())
-        y_values.append(data.iloc[counter]['Close'])
-        ax.set_ylim(min(y_values) - 0.5, max(y_values) + 0.5)
-        line.set_data(x_values, y_values)
+
+    global canvas
+
+    if started:
+        x_val.append(data.iloc[i]['Datetime'].to_pydatetime())
+        y_val.append(data.iloc[i]['Close'])
+        ax.set_ylim(min(y_val) - 0.5, max(y_val) + 0.5)
+
+        # for start, stop in zip(range(0, len(x_val) - 1), range(1, len(x_val))):
+        #     first, second = zip((x_val[start], y_val[start]), (x_val[stop], y_val[stop]))
+        #     ax.plot(first, second, color=color(second))
+        #     print(color(second))
+        #
+        # line.set_data(x_val, y_val)
+        print(i)
+        if (i < len(data) - 1):
+            first, second = zip((data.iloc[i]['Datetime'].to_pydatetime(), data.iloc[i]['Close']),
+                                (data.iloc[i + 1]['Datetime'].to_pydatetime(), data.iloc[i + 1]['Close']))
+            # line.set_data(first, second)
+            line, = ax.plot(first, second, lw=2, color=color(second))
+            # canvas.draw()
+        # plt.show()
     else:
         anim.event_source.stop()
 
-anim = animation.FuncAnimation(fig, animate,
-                                frames=len(data) - 1, interval=100, repeat=False)
+    return line,
 
-begin = False
+#### --- Different Colors --- ####
+def color(y):
+    return 'green' if y[1] > y[0] else 'red'
 
-def start():
-    global begin
-    begin = True
-    anim.event_source.start()
+for i in range(len(data) - 1):
+    first, second = zip((data.iloc[i]['Datetime'].to_pydatetime(), data.iloc[i]['Close']),
+                        (data.iloc[i + 1]['Datetime'].to_pydatetime(), data.iloc[i + 1]['Close']))
+    # line.set_data(first, second)
+    line, = plt.plot(first, second, lw=2, color=color(second))
 
-def stop():
-    anim.event_source.stop()
+    # pos = computeNewPos(pos, vel, force)
+    #
+    #
+    # plt.scatter(pos[0, 0], pos[0, 1], label = '1', color = 'r')
+    # plt.scatter(pos[1, 0], pos[1, 1], label = '2', color = 'b')
+    #
+    # plt.xlabel('X')
+    # plt.ylabel('Y')
 
-button = Tk.Button(master=root, text="Start", command=start)
-button.pack(side=Tk.BOTTOM)
+    plt.pause(0.05)
 
-button = Tk.Button(master=root, text="Stop", command=stop)
-button.pack(side=Tk.BOTTOM)
-
-Tk.mainloop()
+plt.show()
