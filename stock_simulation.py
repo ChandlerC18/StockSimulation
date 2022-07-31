@@ -83,6 +83,8 @@ def agreement_changed():
     # temp.set_color(colors(i))
 
 ### MAIN FLOW ###
+mode = 'Begin'
+amount = 0
 ticker = None # yfinance stock ticker
 valid_entries = False # boolean for whether data entered is valid
 
@@ -202,7 +204,7 @@ ax = fig.add_subplot(xlim=(datetime.datetime(2021, 6, 10, hour=9, minute=30, tzi
                            datetime.datetime(2021, 6, 10, hour=16, minute=0, tzinfo=pytz.timezone('America/New_York'))), ylim=(0, 2))
 # ax = fig.add_subplot(xlim=(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime()), ylim=(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5))
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz=pytz.timezone('America/New_York')))
-line, = ax.plot([], [], lw=2, color='red')
+line, = ax.plot([], [], lw=2, color='lightblue')
 
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.draw()
@@ -214,10 +216,11 @@ button = tk.Button(master=root, text="Quit", command=root.quit)
 button.grid(row=7, column=2)
 
 def animate(i):
-
     global canvas
 
-    if started:
+    if i == len(data) - 2:
+        done()
+    elif started:
         x_val.append(data.iloc[i]['Datetime'].to_pydatetime())
         y_val.append(data.iloc[i]['Close'])
         ax.set_ylim(min(y_val) - 0.5, max(y_val) + 0.5)
@@ -244,25 +247,68 @@ def resume():
         anim.event_source.start()
     else:
         started = True
-        anim = FuncAnimation(fig, animate, init_func=init, frames=389, interval=100, repeat=False, blit=True)
+        anim = FuncAnimation(fig, animate, init_func=init, frames=len(data) - 1, interval=100, repeat=False, blit=True)
 
 def pause():
     if started:
         anim.event_source.stop()
 
-def trade():
-    print('Click')
+def trade(guess):
+    global mode
 
+    if (mode == 'Begin'):
+        mode = guess
+        time = x_val[-1]
+        amount = y_val[-1]
+        info.append((mode, time, amount))
+    elif (mode == 'complete'):
+        pass
+    elif (mode == 'up' and guess == 'down') or (mode == 'down' and guess == 'up'):
+        mode = 'complete'
+        time = x_val[-1]
+        amount = y_val[-1]
+        info.append((guess, time, amount))
+
+def down():
+    trade('down')
+
+def up():
+    trade('up')
+
+def done():
+    msg = 'Below is a list of your transactions: \n\n'
+
+    for i in range(len(info)):
+        if i == 0 and info[i][0] == 'up':
+            msg += 'Long'
+        elif i == 0 and info[i][0] == 'down':
+            msg += 'Short'
+        elif i == 1 and info[i][0] == 'up':
+            msg += 'Bought'
+        elif i == 1 and info[i][0] == 'down':
+            msg += 'Sold'
+
+        msg += f" {stock.get()} at the price of {info[i][2]:0.2f} at {info[i][1]:%H:%M} \n\n"
+
+    if len(info) == 2:
+        msg += f"~~~~~~~~~~~~~~~~"
+        profit = info[0][2] if info[0][0] == 'down' else -info[0][2]
+        profit += info[1][2] if info[1][0] == 'down' else -info[1][2]
+        msg += f"Your profit is {profit:0.2f}"
+
+    tk.messagebox.showinfo(title='Information', message=msg)
+
+info = []
 button = tk.Button(master=root, text="Start", command=resume)
 button.grid(row=7, column=0)
 
 button = tk.Button(master=root, text="Pause", command=pause)
 button.grid(row=7, column=1)
 
-button = tk.Button(master=root, text="Long/Buy", command=trade)
+button = tk.Button(master=root, text="Long/Buy", command=up)
 button.grid(row=8, column=0)
 
-button = tk.Button(master=root, text="Sell/Short", command=trade)
+button = tk.Button(master=root, text="Sell/Short", command=down)
 button.grid(row=8, column=1)
 
 # Run GUI
