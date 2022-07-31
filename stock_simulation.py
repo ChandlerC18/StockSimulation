@@ -195,6 +195,7 @@ checkbox.grid(column=2, row=3, sticky=tk.E, padx=5, pady=5)
 data = None
 x_val = []
 y_val = []
+info = []
 
 plt.rcParams["figure.figsize"] = [7.00, 3.50]
 plt.rcParams["figure.autolayout"] = True
@@ -205,6 +206,8 @@ ax = fig.add_subplot(xlim=(datetime.datetime(2021, 6, 10, hour=9, minute=30, tzi
 # ax = fig.add_subplot(xlim=(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime()), ylim=(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5))
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz=pytz.timezone('America/New_York')))
 line, = ax.plot([], [], lw=2, color='lightblue')
+point_up, = ax.plot([], [], 'k^')
+point_down, = ax.plot([], [], 'kv')
 
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.draw()
@@ -224,6 +227,15 @@ def animate(i):
         x_val.append(data.iloc[i]['Datetime'].to_pydatetime())
         y_val.append(data.iloc[i]['Close'])
         ax.set_ylim(min(y_val) - 0.5, max(y_val) + 0.5)
+
+        for i in range(len(info)):
+            if info[i][0] == 'up':
+                print("plot up")
+                plt.plot(info[i][1], info[i][2], 'k^')
+            else:
+                print("plot down")
+                plt.plot(info[i][1], info[i][2], 'kv')
+
         # ax.set_xlim(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime())
         line.set_data(x_val, y_val)
         canvas.draw()
@@ -233,12 +245,46 @@ def animate(i):
 
     return line,
 
+def animate_point_up(i):
+    global canvas
+
+    if i == len(data) - 2:
+        done()
+    elif started:
+        canvas.draw()
+    else:
+        anim_point_up.event_source.stop()
+
+    return point_up,
+
+def animate_point_down(i):
+    global canvas
+
+    if i == len(data) - 2:
+        done()
+    elif started:
+        canvas.draw()
+    else:
+        anim_point_down.event_source.stop()
+
+    return point_down,
+
 def init():
     line.set_data([], [])
     return line,
 
 anim = None
+anim_point_up = None
+anim_point_down = None
 started = False
+
+def plot_point():
+    if info[-1][0] == 'up':
+        point_up.set_data([info[-1][1]], [info[-1][2]])
+        anim_point_up = FuncAnimation(fig, animate_point_up, frames=len(data) - len(x_val) + 1, interval=20, repeat=False, blit=True)
+    elif info[-1][0] == 'down':
+        point_down.set_data([info[-1][1]], [info[-1][2]])
+        anim_point_down = FuncAnimation(fig, animate_point_down, frames=len(data) - len(x_val) + 1, interval=20, repeat=False, blit=True)
 
 def resume():
     global anim
@@ -247,11 +293,13 @@ def resume():
         anim.event_source.start()
     else:
         started = True
-        anim = FuncAnimation(fig, animate, init_func=init, frames=len(data) - 1, interval=100, repeat=False, blit=True)
+        anim = FuncAnimation(fig, animate, init_func=init, frames=len(data) - 1, interval=20, repeat=False, blit=True)
 
 def pause():
     if started:
         anim.event_source.stop()
+        anim_point_up.event_source.stop()
+        anim_point_down.event_source.stop()
 
 def trade(guess):
     global mode
@@ -261,6 +309,7 @@ def trade(guess):
         time = x_val[-1]
         amount = y_val[-1]
         info.append((mode, time, amount))
+        plot_point()
     elif (mode == 'complete'):
         pass
     elif (mode == 'up' and guess == 'down') or (mode == 'down' and guess == 'up'):
@@ -268,6 +317,7 @@ def trade(guess):
         time = x_val[-1]
         amount = y_val[-1]
         info.append((guess, time, amount))
+        plot_point()
 
 def down():
     trade('down')
@@ -291,14 +341,13 @@ def done():
         msg += f" {stock.get()} at the price of {info[i][2]:0.2f} at {info[i][1]:%H:%M} \n\n"
 
     if len(info) == 2:
-        msg += f"~~~~~~~~~~~~~~~~"
+        msg += "~~~~~~~~~~~~~~~~\n\n"
         profit = info[0][2] if info[0][0] == 'down' else -info[0][2]
         profit += info[1][2] if info[1][0] == 'down' else -info[1][2]
         msg += f"Your profit is {profit:0.2f}"
 
     tk.messagebox.showinfo(title='Information', message=msg)
 
-info = []
 button = tk.Button(master=root, text="Start", command=resume)
 button.grid(row=7, column=0)
 
