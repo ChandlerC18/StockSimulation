@@ -84,11 +84,14 @@ def plot_point():
     """ sets up animation to display the points of transactions on the plot
     """
 
-    if info[-1][0] == 'up': # long/buy transaction
-        point_up.set_data([info[-1][1]], [info[-1][2]])
+    # global anim_point_up
+    # global anim_point_down
+
+    if curr[-1][0] == 'up': # long/buy transaction
+        point_up.set_data([curr[-1][1]], [curr[-1][2]])
         anim_point_up = FuncAnimation(fig, animate_point_up, frames=len(data) - len(x_val) + 1, interval=20, repeat=False, blit=True)
-    elif info[-1][0] == 'down': # short/sell transaction
-        point_down.set_data([info[-1][1]], [info[-1][2]])
+    elif curr[-1][0] == 'down': # short/sell transaction
+        point_down.set_data([curr[-1][1]], [curr[-1][2]])
         anim_point_down = FuncAnimation(fig, animate_point_down, frames=len(data) - len(x_val) + 1, interval=20, repeat=False, blit=True)
 
 def resume():
@@ -100,7 +103,7 @@ def resume():
 
     if started: # check if animation has started already
         anim.event_source.start()
-    elif data != None: # start animation if it wasn't started yet and valid stock ticker and date
+    elif type(data) != type(None): # start animation if it wasn't started yet and valid stock ticker and date
         started = True
         anim = FuncAnimation(fig, animate, init_func=init, frames=len(data) - 1, interval=20, repeat=False, blit=True)
 
@@ -110,8 +113,12 @@ def pause():
 
     if started: # check if the plot has been started, then stop all 3 animations; otherwise, nothing needs to be done
         anim.event_source.stop()
-        anim_point_up.event_source.stop()
-        anim_point_down.event_source.stop()
+
+        if type(anim_point_up) != type(None): # check if long/buy transaction
+            anim_point_up.event_source.stop()
+
+        if type(anim_point_down) != type(None): # check if short/sell transaction
+            anim_point_down.event_source.stop()
 
 def trade(guess):
     """ save data of transaction
@@ -123,7 +130,8 @@ def trade(guess):
         mode = guess
         time = x_val[-1]
         amount = y_val[-1]
-        info.append((mode, time, amount))
+        curr.append((mode, time, amount))
+        transactions.append((mode, time, amount))
         plot_point()
     elif (mode == 'complete'): # only up to 2 transactions are allowed
         pass
@@ -131,7 +139,8 @@ def trade(guess):
         mode = 'complete'
         time = x_val[-1]
         amount = y_val[-1]
-        info.append((guess, time, amount))
+        curr.append((guess, time, amount))
+        transactions.append((guess, time, amount))
         plot_point()
 
 def down():
@@ -146,30 +155,33 @@ def up():
 
     trade('up')
 
-def done():
+def progress():
     """ display transaction information when trading is done
     """
+
+    global profit
 
     msg = 'Below is a list of your transactions: \n\n'
 
     # loop through all transactions
-    for i in range(len(info)):
-        if i == 0 and info[i][0] == 'up':
+    for i in range(len(transactions)):
+        if i == 0 and transactions[i][0] == 'up':
             msg += 'Long'
-        elif i == 0 and info[i][0] == 'down':
+        elif i == 0 and transactions[i][0] == 'down':
             msg += 'Short'
-        elif i == 1 and info[i][0] == 'up':
+        elif i == 1 and transactions[i][0] == 'up':
             msg += 'Bought'
-        elif i == 1 and info[i][0] == 'down':
+        elif i == 1 and transactions[i][0] == 'down':
             msg += 'Sold'
 
-        msg += f" {stock.get().upper()} at the price of {info[i][2]:0.2f} at {info[i][1]:%H:%M} \n\n"
+        msg += f" {stock.get().upper()} at the price of {transactions[i][2]:0.2f} on {transactions[i][1]:%Y-%m-%d %H:%M} \n\n"
 
-    if len(info) == 2: # if 2 transactions, calculate profit
-        msg += "~~~~~~~~~~~~~~~~\n\n"
-        profit = info[0][2] if info[0][0] == 'down' else -info[0][2]
-        profit += info[1][2] if info[1][0] == 'down' else -info[1][2]
-        msg += f"Your profit is {profit:0.2f}"
+    if len(curr) == 2: # if 2 transactions, calculate profit
+        profit += curr[0][2] if curr[0][0] == 'down' else -curr[0][2]
+        profit += curr[1][2] if curr[1][0] == 'down' else -curr[1][2]
+
+    msg += "~~~~~~~~~~~~~~~~\n\n"
+    msg += f"Your profit is {profit:0.2f}"
 
     tk.messagebox.showinfo(title='Information', message=msg)
 
@@ -231,6 +243,32 @@ def init():
     line.set_data([], [])
     return line,
 
+def reset():
+    """ reset plot for next stock ticker and date
+    """
+
+    global started
+    global mode
+    global data
+    global x_val
+    global y_val
+    global curr
+
+    # reset values of variables
+    line.set_data([], [])
+    point_up.set_data([], [])
+    point_down.set_data([], [])
+    ax.set_ylim(0, 2)
+    canvas.draw()
+    x_val = []
+    y_val = []
+    started = False
+    data = None
+    mode = 'Begin' if mode == 'complete' else mode
+    curr = [] if len(curr) == 2 else curr
+    stock_entry.delete(0, len(stock.get()))
+    date_entry.delete(0, len(date.get()))
+
 #
 # def animate(i):
 #     time.append(i)
@@ -242,7 +280,7 @@ def init():
 
 ### MAIN FLOW ###
 mode = 'Begin' # last transaction
-amount = 0 # profit
+profit = 0 # profit
 ticker = None # yfinance stock ticker
 valid_entries = False # boolean for whether data entered is valid
 
@@ -292,11 +330,6 @@ checkbox = ttk.Checkbutton(root, text='Show Graph Toolbar', command=agreement_ch
                 variable=agreement, onvalue='agree', offvalue='disagree')
 checkbox.grid(column=2, row=3, sticky=tk.E, padx=5, pady=5)
 
-# Canvas element for plot
-canvas = FigureCanvasTkAgg(fig, master=root)
-canvas.draw()
-canvas.get_tk_widget().grid(row=5, column=0, ipadx=40, ipady=20, columnspan=3)
-
 # Quit button
 button = tk.Button(master=root, text="Quit", command=root.quit)
 button.grid(row=7, column=2)
@@ -314,16 +347,24 @@ button = tk.Button(master=root, text="Long/Buy", command=up)
 button.grid(row=8, column=0)
 
 # Sell/Short button
-
 button = tk.Button(master=root, text="Sell/Short", command=down)
 button.grid(row=8, column=1)
+
+# Reset button
+button = tk.Button(master=root, text="Reset", command=reset)
+button.grid(row=8, column=2)
+
+# Progress button
+button = tk.Button(master=root, text="Progress", command=progress)
+button.grid(row=9, column=2)
 
 ### Create figure
 ## Init Plot Variables
 data = None # pandas dataframe of stock information
 x_val = [] # time
 y_val = [] # stock price
-info = [] # transaction list
+curr = [] # list of current transactionss
+transactions = []
 
 toolbar = None # plot toolbar
 
@@ -346,6 +387,11 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz=pytz.timezone('Ame
 line, = ax.plot([], [], lw=2, color='lightblue')
 point_up, = ax.plot([], [], 'k^')
 point_down, = ax.plot([], [], 'kv')
+
+# Canvas element for plot
+canvas = FigureCanvasTkAgg(fig, master=root)
+canvas.draw()
+canvas.get_tk_widget().grid(row=5, column=0, ipadx=40, ipady=20, columnspan=3)
 
 # Run GUI
 root.mainloop()
