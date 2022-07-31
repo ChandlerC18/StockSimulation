@@ -192,3 +192,59 @@ for i in range(len(data) - 1):
     plt.pause(0.05)
 
 plt.show()
+
+#### OTHER CODE ####
+# root.columnconfigure(0, weight=1)
+# root.columnconfigure(1, weight=2)
+# root.rowconfigure(0, weight=1)
+# root.rowconfigure(1, weight=2)
+# enter_stock = ttk.Frame(root)
+#
+#
+# # stock label
+# stock_label = ttk.Label(enter_stock, text="Stock:")
+# stock_label.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
+#
+# stock_entry = ttk.Entry(enter_stock, textvariable=stock)
+# stock_entry.focus()
+# stock_entry.grid(column=1, row=0, sticky=tk.E, padx=5, pady=5)
+
+## Combo box for selecting date
+# enter_date = ttk.Frame(root)
+# date_label = ttk.Label(enter_date, text="Please select a month:")
+# date_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
+
+# # create a combobox
+# selected_month = tk.StringVar()
+# month_cb = ttk.Combobox(enter_date, textvariable=selected_month)
+#
+# # get first 3 letters of every month name
+# month_cb['values'] = [month_name[m][0:3] for m in range(1, 13)]
+#
+# # prevent typing a value
+# month_cb['state'] = 'normal'
+#
+# # place the widget
+# month_cb.grid(column=1, row=1, sticky=tk.E, padx=5, pady=5)
+#
+#
+# # bind the selected value changes
+# def month_changed(event):
+#     """ handle the month changed event """
+#     showinfo(
+#         title='Result',
+#         message=f'You selected {selected_month.get()}!'
+#     )
+#
+#
+# month_cb.bind('<<ComboboxSelected>>', month_changed)
+#
+# # set the current month
+# current_month = datetime.now().strftime('%b')
+# month_cb.set(current_month)
+
+## Get stock data ##
+# date_end = datetime.strptime(date.get(), "%Y-%m-%d") + datetime.timedelta(days=1)
+# data = ticker.history(start=date.get(), end=date_end.strftime("%Y-%m-%d"), interval="1m").reset_index()
+#
+# data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace(year=int(date_start[:4]), month=int(date_start[5:7]), day=int(date_start[8:]))

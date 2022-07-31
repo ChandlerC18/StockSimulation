@@ -48,7 +48,6 @@ def login_clicked():
         prepare_data()
 
 def prepare_data():
-
     global ax
     global fig
     global data
@@ -63,7 +62,6 @@ def prepare_data():
     canvas.draw()
 
 def agreement_changed():
-
     global toolbar
 
     if agreement.get() == 'agree':
@@ -73,210 +71,6 @@ def agreement_changed():
     else:
         toolbar.grid_remove()
 
-#
-# def animate(i):
-#     time.append(i)
-#     close.append(random.randint(0, 5))
-#     f_d.set_data(time, close)
-    # f_d.set_color(colors(i))
-    # temp.set_text(str(int(T[i])) + ' K')
-    # temp.set_color(colors(i))
-
-### MAIN FLOW ###
-mode = 'Begin'
-amount = 0
-ticker = None # yfinance stock ticker
-valid_entries = False # boolean for whether data entered is valid
-
-# Configure main window
-root = tk.Tk()
-
-window = (1300, 800) # window dimension
-screen = (root.winfo_screenwidth(), root.winfo_screenheight()) # get the screen dimension
-center= (int(screen[0]/2 - window[0] / 2), int(screen[1]/2 - window[1] / 2)) # find the center point
-root.geometry(f'{window[0]}x{window[1]}+{center[0]}+{center[1]}') # set position of window to center of screen
-
-# root.resizable(False, False)
-root.title('Stock Simulation')
-
-## Stock entry textbox
-stock = tk.StringVar() # store stock name
-date = tk.StringVar() # store date
-
-# # Stock entry frame
-# root.columnconfigure(0, weight=1)
-# root.columnconfigure(1, weight=2)
-# root.rowconfigure(0, weight=1)
-# root.rowconfigure(1, weight=2)
-# enter_stock = ttk.Frame(root)
-#
-#
-# # stock label
-# stock_label = ttk.Label(enter_stock, text="Stock:")
-# stock_label.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
-#
-# stock_entry = ttk.Entry(enter_stock, textvariable=stock)
-# stock_entry.focus()
-# stock_entry.grid(column=1, row=0, sticky=tk.E, padx=5, pady=5)
-
-
-# configure the grid
-root.columnconfigure(0, weight=1)
-root.columnconfigure(1, weight=3)
-root.columnconfigure(2, weight=20)
-
-
-# stock label
-stock_label = ttk.Label(root, text="Stock:")
-stock_label.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
-
-stock_entry = ttk.Entry(root, textvariable=stock)
-stock_entry.focus()
-stock_entry.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
-
-# date label
-date_label = ttk.Label(root, text="Date (YYYY-MM-DD):")
-date_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
-
-date_entry = ttk.Entry(root,  textvariable=date)
-date_entry.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
-
-# Run button
-run_button = ttk.Button(root, text="Run", command=login_clicked)
-run_button.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
-
-
-## Checkbox to display graph toolbar
-agreement = tk.StringVar()
-checkbox = ttk.Checkbutton(root, text='Show Graph Toolbar', command=agreement_changed,
-                variable=agreement, onvalue='agree', offvalue='disagree')
-checkbox.grid(column=2, row=3, sticky=tk.E, padx=5, pady=5)
-
-## Select date
-# enter_date = ttk.Frame(root)
-# date_label = ttk.Label(enter_date, text="Please select a month:")
-# date_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
-
-# # create a combobox
-# selected_month = tk.StringVar()
-# month_cb = ttk.Combobox(enter_date, textvariable=selected_month)
-#
-# # get first 3 letters of every month name
-# month_cb['values'] = [month_name[m][0:3] for m in range(1, 13)]
-#
-# # prevent typing a value
-# month_cb['state'] = 'normal'
-#
-# # place the widget
-# month_cb.grid(column=1, row=1, sticky=tk.E, padx=5, pady=5)
-#
-#
-# # bind the selected value changes
-# def month_changed(event):
-#     """ handle the month changed event """
-#     showinfo(
-#         title='Result',
-#         message=f'You selected {selected_month.get()}!'
-#     )
-#
-#
-# month_cb.bind('<<ComboboxSelected>>', month_changed)
-#
-# # set the current month
-# current_month = datetime.now().strftime('%b')
-# month_cb.set(current_month)
-
-## Get stock data ##
-# date_end = datetime.strptime(date.get(), "%Y-%m-%d") + datetime.timedelta(days=1)
-# data = ticker.history(start=date.get(), end=date_end.strftime("%Y-%m-%d"), interval="1m").reset_index()
-#
-# data.loc[len(data) - 1, 'Datetime'] = data.iloc[len(data)-1]['Datetime'].replace(year=int(date_start[:4]), month=int(date_start[5:7]), day=int(date_start[8:]))
-
-data = None
-x_val = []
-y_val = []
-info = []
-
-plt.rcParams["figure.figsize"] = [7.00, 3.50]
-plt.rcParams["figure.autolayout"] = True
-
-fig = plt.Figure(dpi=100)
-ax = fig.add_subplot(xlim=(datetime.datetime(2021, 6, 10, hour=9, minute=30, tzinfo=pytz.timezone('America/New_York')),
-                           datetime.datetime(2021, 6, 10, hour=16, minute=0, tzinfo=pytz.timezone('America/New_York'))), ylim=(0, 2))
-# ax = fig.add_subplot(xlim=(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime()), ylim=(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5))
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz=pytz.timezone('America/New_York')))
-line, = ax.plot([], [], lw=2, color='lightblue')
-point_up, = ax.plot([], [], 'k^')
-point_down, = ax.plot([], [], 'kv')
-
-canvas = FigureCanvasTkAgg(fig, master=root)
-canvas.draw()
-canvas.get_tk_widget().grid(row=5, column=0, ipadx=40, ipady=20, columnspan=3)
-
-toolbar = None
-
-button = tk.Button(master=root, text="Quit", command=root.quit)
-button.grid(row=7, column=2)
-
-def animate(i):
-    global canvas
-
-    if i == len(data) - 2:
-        done()
-    elif started:
-        x_val.append(data.iloc[i]['Datetime'].to_pydatetime())
-        y_val.append(data.iloc[i]['Close'])
-        ax.set_ylim(min(y_val) - 0.5, max(y_val) + 0.5)
-
-        for i in range(len(info)):
-            if info[i][0] == 'up':
-                print("plot up")
-                plt.plot(info[i][1], info[i][2], 'k^')
-            else:
-                print("plot down")
-                plt.plot(info[i][1], info[i][2], 'kv')
-
-        # ax.set_xlim(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime())
-        line.set_data(x_val, y_val)
-        canvas.draw()
-        # plt.show()
-    else:
-        anim.event_source.stop()
-
-    return line,
-
-def animate_point_up(i):
-    global canvas
-
-    if i == len(data) - 2:
-        done()
-    elif started:
-        canvas.draw()
-    else:
-        anim_point_up.event_source.stop()
-
-    return point_up,
-
-def animate_point_down(i):
-    global canvas
-
-    if i == len(data) - 2:
-        done()
-    elif started:
-        canvas.draw()
-    else:
-        anim_point_down.event_source.stop()
-
-    return point_down,
-
-def init():
-    line.set_data([], [])
-    return line,
-
-anim = None
-anim_point_up = None
-anim_point_down = None
-started = False
 
 def plot_point():
     if info[-1][0] == 'up':
@@ -347,6 +141,155 @@ def done():
         msg += f"Your profit is {profit:0.2f}"
 
     tk.messagebox.showinfo(title='Information', message=msg)
+
+
+def animate(i):
+    global canvas
+
+    if i == len(data) - 2:
+        done()
+    elif started:
+        x_val.append(data.iloc[i]['Datetime'].to_pydatetime())
+        y_val.append(data.iloc[i]['Close'])
+        ax.set_ylim(min(y_val) - 0.5, max(y_val) + 0.5)
+
+        for i in range(len(info)):
+            if info[i][0] == 'up':
+                plt.plot(info[i][1], info[i][2], 'k^')
+            else:
+                plt.plot(info[i][1], info[i][2], 'kv')
+
+        # ax.set_xlim(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime())
+        line.set_data(x_val, y_val)
+        canvas.draw()
+        # plt.show()
+    else:
+        anim.event_source.stop()
+
+    return line,
+
+def animate_point_up(i):
+    global canvas
+
+    if i == len(data) - 2:
+        done()
+    elif started:
+        canvas.draw()
+    else:
+        anim_point_up.event_source.stop()
+
+    return point_up,
+
+def animate_point_down(i):
+    global canvas
+
+    if i == len(data) - 2:
+        done()
+    elif started:
+        canvas.draw()
+    else:
+        anim_point_down.event_source.stop()
+
+    return point_down,
+
+def init():
+    line.set_data([], [])
+    return line,
+
+#
+# def animate(i):
+#     time.append(i)
+#     close.append(random.randint(0, 5))
+#     f_d.set_data(time, close)
+    # f_d.set_color(colors(i))
+    # temp.set_text(str(int(T[i])) + ' K')
+    # temp.set_color(colors(i))
+
+### MAIN FLOW ###
+mode = 'Begin'
+amount = 0
+ticker = None # yfinance stock ticker
+valid_entries = False # boolean for whether data entered is valid
+
+# Configure main window
+root = tk.Tk()
+
+window = (1300, 800) # window dimension
+screen = (root.winfo_screenwidth(), root.winfo_screenheight()) # get the screen dimension
+center= (int(screen[0]/2 - window[0] / 2), int(screen[1]/2 - window[1] / 2)) # find the center point
+root.geometry(f'{window[0]}x{window[1]}+{center[0]}+{center[1]}') # set position of window to center of screen
+
+# root.resizable(False, False)
+root.title('Stock Simulation')
+
+## Stock entry textbox
+stock = tk.StringVar() # store stock name
+date = tk.StringVar() # store date
+
+# # Stock entry frame
+# configure the grid
+root.columnconfigure(0, weight=1)
+root.columnconfigure(1, weight=3)
+root.columnconfigure(2, weight=20)
+
+# stock label
+stock_label = ttk.Label(root, text="Stock:")
+stock_label.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
+
+stock_entry = ttk.Entry(root, textvariable=stock)
+stock_entry.focus()
+stock_entry.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
+
+# date label
+date_label = ttk.Label(root, text="Date (YYYY-MM-DD):")
+date_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
+
+date_entry = ttk.Entry(root,  textvariable=date)
+date_entry.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
+
+# Run button
+run_button = ttk.Button(root, text="Run", command=login_clicked)
+run_button.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
+
+## Checkbox to display graph toolbar
+agreement = tk.StringVar()
+checkbox = ttk.Checkbutton(root, text='Show Graph Toolbar', command=agreement_changed,
+                variable=agreement, onvalue='agree', offvalue='disagree')
+checkbox.grid(column=2, row=3, sticky=tk.E, padx=5, pady=5)
+
+### Create figure
+## Init Plot Variables
+data = None
+x_val = []
+y_val = []
+info = []
+
+toolbar = None
+
+anim = None
+anim_point_up = None
+anim_point_down = None
+started = False
+## End Variables
+
+plt.rcParams["figure.figsize"] = [7.00, 3.50]
+plt.rcParams["figure.autolayout"] = True
+
+fig = plt.Figure(dpi=100)
+ax = fig.add_subplot(xlim=(datetime.datetime(2021, 6, 10, hour=9, minute=30, tzinfo=pytz.timezone('America/New_York')),
+                           datetime.datetime(2021, 6, 10, hour=16, minute=0, tzinfo=pytz.timezone('America/New_York'))), ylim=(0, 2))
+# ax = fig.add_subplot(xlim=(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime()), ylim=(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5))
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz=pytz.timezone('America/New_York')))
+line, = ax.plot([], [], lw=2, color='lightblue')
+point_up, = ax.plot([], [], 'k^')
+point_down, = ax.plot([], [], 'kv')
+
+canvas = FigureCanvasTkAgg(fig, master=root)
+canvas.draw()
+canvas.get_tk_widget().grid(row=5, column=0, ipadx=40, ipady=20, columnspan=3)
+
+button = tk.Button(master=root, text="Quit", command=root.quit)
+button.grid(row=7, column=2)
 
 button = tk.Button(master=root, text="Start", command=resume)
 button.grid(row=7, column=0)
