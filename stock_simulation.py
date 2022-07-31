@@ -64,6 +64,7 @@ def prepare_data():
 
     ax.set_ylim(data.iloc[0]['Close'] - 0.5, data.iloc[0]['Close'] + 0.5) # set up y axis
     ax.set_xlim(data.iloc[0]['Datetime'].to_pydatetime(), data.iloc[len(data) - 1]['Datetime'].to_pydatetime()) # set up x axis
+    fig.suptitle(f"Stock Price of {stock.get()} on {data.iloc[0]['Datetime'].to_pydatetime():%b %d, %Y}", size=13) # plot title
     canvas.draw()
 
 def agreement_changed():
@@ -174,7 +175,7 @@ def progress():
         elif i == 1 and transactions[i][0] == 'down':
             msg += 'Sold'
 
-        msg += f" {stock.get().upper()} at the price of {transactions[i][2]:0.2f} on {transactions[i][1]:%Y-%m-%d %H:%M} \n\n"
+        msg += f" {stock.get().upper()} at the price of {transactions[i][2]:0.2f} on {transactions[i][1]:%b %d, %Y %H:%M} \n\n"
 
     if len(curr) == 2: # if 2 transactions, calculate profit
         profit += curr[0][2] if curr[0][0] == 'down' else -curr[0][2]
@@ -255,6 +256,7 @@ def reset():
     global curr
 
     # reset values of variables
+    fig.suptitle("")
     line.set_data([], [])
     point_up.set_data([], [])
     point_down.set_data([], [])
@@ -330,10 +332,6 @@ checkbox = ttk.Checkbutton(root, text='Show Graph Toolbar', command=agreement_ch
                 variable=agreement, onvalue='agree', offvalue='disagree')
 checkbox.grid(column=2, row=3, sticky=tk.E, padx=5, pady=5)
 
-# Quit button
-button = tk.Button(master=root, text="Quit", command=root.quit)
-button.grid(row=7, column=2)
-
 # Start button
 button = tk.Button(master=root, text="Start", command=resume)
 button.grid(row=7, column=0)
@@ -352,10 +350,14 @@ button.grid(row=8, column=1)
 
 # Reset button
 button = tk.Button(master=root, text="Reset", command=reset)
-button.grid(row=8, column=2)
+button.grid(row=7, column=2)
 
 # Progress button
 button = tk.Button(master=root, text="Progress", command=progress)
+button.grid(row=8, column=2)
+
+# Quit button
+button = tk.Button(master=root, text="Quit", command=root.quit)
 button.grid(row=9, column=2)
 
 ### Create figure
