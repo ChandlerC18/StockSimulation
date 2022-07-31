@@ -214,7 +214,7 @@ def animate_point_up(i):
     global canvas
 
     if i == len(data) - 2:
-        done()
+        progress()
     elif started:
         canvas.draw()
     else:
@@ -270,15 +270,6 @@ def reset():
     curr = [] if len(curr) == 2 else curr
     stock_entry.delete(0, len(stock.get()))
     date_entry.delete(0, len(date.get()))
-
-#
-# def animate(i):
-#     time.append(i)
-#     close.append(random.randint(0, 5))
-#     f_d.set_data(time, close)
-    # f_d.set_color(colors(i))
-    # temp.set_text(str(int(T[i])) + ' K')
-    # temp.set_color(colors(i))
 
 ### MAIN FLOW ###
 mode = 'Begin' # last transaction
